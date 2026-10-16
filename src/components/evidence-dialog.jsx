@@ -1,0 +1,24 @@
+import * as React from 'react';
+const h=React.createElement;
+export function EvidenceDialog({items=[],onClose,dark=false,loading=false,error='',initialId=''}){
+ const [selected,setSelected]=React.useState(initialId||items[0]?.id||''),root=React.useRef(null),close=React.useRef(null);
+ const active=items.find(x=>x.id===selected)||items[0];
+ React.useEffect(()=>{const previous=document.activeElement;close.current?.focus();const escape=e=>{if(e.key==='Escape'){e.stopPropagation();onClose();}};document.addEventListener('keydown',escape);return()=>{document.removeEventListener('keydown',escape);previous?.focus?.();};},[onClose]);
+ const ink=dark?'#e6edf4':'#263e34',muted=dark?'#aabac9':'#718078',paper=dark?'#152233':'#faf8f0',line=dark?'#415269':'#d9ded4';
+ const button={font:'inherit',color:ink,border:'1px solid '+line,borderRadius:7,background:'transparent',padding:'10px 13px',cursor:'pointer',textAlign:'left'};
+ function trap(e){if(e.key!=='Tab')return;const buttons=[...root.current.querySelectorAll('button:not(:disabled)')];if(!buttons.length)return;const first=buttons[0],last=buttons.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}
+ return <div onClick={onClose} style={{position:'fixed',inset:0,zIndex:10000,background:'#0c1b176e',display:'flex',alignItems:'center',justifyContent:'center',padding:16,boxSizing:'border-box'}}>
+  <section ref={root} role="dialog" aria-modal="true" aria-labelledby="evidence-title" onKeyDown={trap} onClick={e=>e.stopPropagation()} style={{color:ink,background:paper,border:'1px solid '+line,borderRadius:14,width:850,maxWidth:'100%',maxHeight:'85dvh',display:'flex',flexDirection:'column',boxShadow:'0 25px 90px #0004',fontFamily:'inherit'}}>
+   <header style={{padding:'20px 24px',display:'flex',alignItems:'center',gap:16,borderBottom:'1px solid '+line}}><div style={{flex:1}}><h2 id="evidence-title" style={{fontSize:22,margin:0,fontWeight:500}}>线索与证据</h2><p style={{margin:'7px 0 0',fontSize:12,color:muted}}>第一章 · 已记录 {items.length} 项</p></div><button ref={close} style={button} onClick={onClose} aria-label="关闭线索与证据">关闭</button></header>
+   {loading?<p role="status" style={{padding:24}}>正在翻阅记录…</p>:error?<p role="alert" style={{padding:24}}>{error}</p>:!items.length?<div style={{padding:'46px 24px',color:muted,lineHeight:1.9}}>尚未记录物证。完成现场观察后，获得的线索会保存在这里。</div>:<div style={{display:'flex',flexWrap:'wrap',overflow:'auto',minHeight:220}}>
+    <nav aria-label="已获取的证据" style={{flex:'1 1 190px',padding:16,boxSizing:'border-box',display:'flex',flexDirection:'column',gap:8,maxHeight:'48dvh',overflowY:'auto'}}>{items.map(item=><button key={item.id} onClick={()=>setSelected(item.id)} aria-pressed={active?.id===item.id} style={{...button,background:active?.id===item.id?(dark?'#2c443f':'#e6ece2'):'transparent',borderColor:active?.id===item.id?'#718a75':line}}>{item.title}{!item.complete&&<small style={{display:'block',marginTop:5,color:muted}}>部分记录</small>}</button>)}</nav>
+    <article aria-live="polite" style={{flex:'3 1 270px',padding:24,boxSizing:'border-box',borderLeft:'1px solid '+line,overflowY:'auto',maxHeight:'58dvh',lineHeight:1.9}}><h3 style={{margin:'0 0 18px',fontSize:20,fontWeight:500}}>{active.title}</h3>{active.sections?.map(section=><div key={section.id} style={{marginBottom:18}}>{active.sections.length>1&&<h4 style={{fontSize:13,color:muted,margin:'0 0 5px'}}>{section.title}</h4>}{section.versions?.slice(0,-1).map(version=><div key={version.id} style={{marginBottom:14,color:muted}}><small style={{display:'block',marginBottom:4}}>{version.label} · 已更新</small><p style={{margin:0,whiteSpace:'pre-wrap'}}><del>{version.text}</del></p></div>)}{section.versions?.length>1&&<small style={{display:'block',color:muted,marginBottom:4}}>{section.versions.at(-1).label}</small>}<p style={{margin:0,whiteSpace:'pre-wrap'}}>{section.text}</p></div>)}{active.scopeNote&&<p data-evidence-scope-note style={{margin:'20px 0 0',paddingTop:14,borderTop:'1px solid '+line,fontSize:13,color:muted}}>{active.scopeNote.struck?<del>{active.scopeNote.text}</del>:active.scopeNote.text}</p>}{!active.complete&&<p style={{fontSize:12,color:muted}}>这里只记录已经查看的部分。</p>}</article>
+   </div>}
+  </section>
+ </div>;
+}
+
+export function EvidenceUpdateNotice({items=[],onOpen,dark=false}){
+ if(!items.length)return null;
+ return <div role="status" style={{margin:'16px 0 8px',fontSize:12,lineHeight:1.8}}><button type="button" onClick={()=>onOpen(items[0]?.id)} aria-label={'线索已更新：'+items.map(i=>i.title).join('、')+'，点击查看'} style={{font:'inherit',cursor:'pointer',border:'1px solid '+(dark?'#52634a':'#d3dcc9'),borderRadius:6,padding:'6px 11px',background:dark?'#253426':'#eef2e7',color:dark?'#cedabf':'#506442',textAlign:'left'}}>线索已更新<span style={{marginLeft:9,opacity:.85}}>{items.map(i=>i.title).join('、')}</span></button></div>;
+}

@@ -1,0 +1,13 @@
+import {build} from 'esbuild';
+import {mkdir,readFile,writeFile,rm} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+await rm('dist',{recursive:true,force:true});
+await mkdir('dist/assets',{recursive:true});
+const bundle=await build({entryPoints:['src/main.jsx'],outdir:'dist/assets',entryNames:'game-[hash]',bundle:true,minify:true,metafile:true,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'}});
+const js=Object.keys(bundle.metafile.outputs).find(p=>p.endsWith('.js')).replace('dist/','');
+const css=(await readFile('src/app/globals.css','utf8')).replace(/^@import\s+"tailwindcss";\s*/,'');
+const cssPath='assets/game-'+createHash('sha256').update(css).digest('hex').slice(0,10)+'.css';
+await writeFile('dist/'+cssPath,css);
+await writeFile('dist/.nojekyll','');
+await writeFile('dist/index.html',`<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><meta name="referrer" content="same-origin"><title>山河旅探 · 六章主线</title><link rel="icon" href="data:,"><link rel="stylesheet" href="./${cssPath}"></head><body><div id="root"></div><script type="module" src="./${js}"></script></body></html>`);
+console.log('GitHub Pages frontend built: dist/');

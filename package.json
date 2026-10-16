@@ -1,0 +1,9 @@
+{
+  "name":"shanhe-storylet-web",
+  "version":"1.0.0",
+  "private":true,
+  "type":"module",
+  "scripts":{"build":"node build.mjs","test":"node --test test/*.test.mjs"},
+  "dependencies":{"react":"19.2.6","react-dom":"19.2.6"},
+  "devDependencies":{"esbuild":"0.28.0"}
+}
